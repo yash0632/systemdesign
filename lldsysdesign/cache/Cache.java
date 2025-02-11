@@ -32,7 +32,7 @@ class Storage{
         if(storage.size() == capacity){
             //Remove as per eviction policy
         }
-        storage.put(key,value);
+        storacge.put(key,value);
     }
 
 }
