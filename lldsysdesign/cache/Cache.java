@@ -3,7 +3,7 @@ import java.util.LinkedHashMap;
 
 
 public class Cache<K,V>{
-    private final EvictionPolicy evictionPolicy;
+    private final EvictionPolicy<K> evictionPolicy;
     private final Storage<K,V> storage;
     private final Integer capacity;
 
@@ -24,10 +24,15 @@ public class Cache<K,V>{
     public V get(K key){
         V value =  storage.get(key);
         if(value != null){
-            evictionPolicy.recordAccess(K);
+            evictionPolicy.recordAccess(key);
         }
         return value;
     }
+
+    public void remove(K key){
+        storage.remove(key);
+    }
+    
 }   
 
 //add
@@ -72,6 +77,7 @@ class MapStorage<K,V> implements Storage<K,V>{
 interface EvictionPolicy<K>{
     K evict();
     void recordAccess(K key);
+    void remove(K key);
 }
 
 
@@ -80,16 +86,24 @@ class LRUEvictionPolicy<K> implements EvictionPolicy<K>{
     LinkedHashMap<K,Void> accessOrder;
 
     public LRUEvictionPolicy(){
-        this.accessOrder = new LinkedHashMap<>();
+        this.accessOrder = new LinkedHashMap<>(16, 0.75f, true);
     }
     
     public K evict(){
-        //get least recently used key
-        this.accessOrder
+        //get least recently used key which is first value in accessOrder
+        K keyToEvict = this.accessOrder.entrySet().iterator().next().getKey();
+        this.accessOrder.remove(keyToEvict);
+        return keyToEvict;
     }
 
     public void recordAccess(K key){
+        //this.accessOrder.get(key);
+        this.accessOrder.remove(key);
+        this.accessOrder.put(key,null);
+    }
 
+    public void remove(K key){
+        this.accessOrder.remove(key);
     }
 }
 //OPEN CLOSED PRINCIPLE
